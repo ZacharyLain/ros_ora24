@@ -20,10 +20,6 @@ class WheelParser(Node):
         self.left_motor_pub = self.create_publisher(ControlMessage, 'left_wheel_speed/odrive', 10)
         self.get_logger().info('Node has been started.')
         
-        # Initialize the CAN bus
-        """ self.bus = can.interface.Bus(channel='can0', bustype='socketcan')
-        self.get_logger().info('CAN bus has been initialized.') """
-        
     def cmd_vel_callback(self, vel):
         linear = vel.linear.x
         angular = vel.angular.z
@@ -59,35 +55,6 @@ class WheelParser(Node):
         
         self.right_motor_pub.publish(control_msg_right)
         self.left_motor_pub.publish(control_msg_left)
-
-        # Send the desired speed to the motor controller
-        #self.send_can_message(speed_wish_right, speed_wish_left)
-        
-    def send_can_message(self, speed_right, speed_left):
-        # Create the CAN message
-        can_id = 0x01 # change this to real arbitration ID
-        data = self.create_can_data(speed_right, speed_left)
-        msg = can.Message(arbitration_id=can_id, data=data, is_extended_id=False)
-        
-        try:
-            # Send the CAN message
-            self.bus.send(msg)
-            self.get_logger().info(f"Sent CAN message: ID={msg.arbitration_id}, data={msg.data}")
-        except can.CanError:
-            self.get_logger().error("Failed to send CAN message")
-
-    def create_can_data(self, speed_right, speed_left):
-        # Create byte array for the CAN message
-        speed_right = int(speed_right * 1000)
-        speed_left = int(speed_left * 1000)
-        
-        # Create byte array
-        data = bytearray()
-        data.extend(speed_right.to_bytes(2, byteorder='little', signed=True))
-        data.extend(speed_left.to_bytes(2, byteorder='little', signed=True))
-        return data
-
-        
         
 def main(args=None):
     rclpy.init(args=args)
